@@ -11,6 +11,8 @@ import kotlinx.css.px
 import model.PostWithComments
 import model.User
 import react.*
+import reactive.action
+import reactive.observable
 import styled.StyleSheet
 import styled.css
 import styled.styledDiv
@@ -42,25 +44,19 @@ interface PostProps : RProps {
     var onMoreComments: () -> Unit
 }
 
-class PostState : RState {
-    var noMore: Boolean = false
-    var loading: Boolean = false
-}
-
-class PostView : RComponent<PostProps, PostState>() {
+class PostView : ReactiveComponent<PostProps>() {
     private val post
         get() = props.postWithComments.post
 
     private val comments
         get() = props.postWithComments.comments
 
-    init {
-        state = PostState()
-    }
+    var noMore: Boolean by observable(false)
+    var loading: Boolean by observable(false)
 
-    override fun componentDidUpdate(prevProps: PostProps, prevState: PostState, snapshot: Any) {
-        if (state.loading && prevProps != props) {
-            setState {
+    override fun componentDidUpdate(prevProps: PostProps) {
+        if (loading && prevProps != props) {
+            action {
                 noMore = prevProps.postWithComments.comments.size == props.postWithComments.comments.size
                 loading = false
             }
@@ -104,10 +100,10 @@ class PostView : RComponent<PostProps, PostState>() {
                     }
                 }
 
-                if (!state.noMore) {
+                if (!noMore) {
                     ringButton {
                         attrs {
-                            loader = state.loading
+                            loader = loading
                             onMouseDown = {
                                 setState {
                                     loading = true
